@@ -11,6 +11,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signInWithGoogle: () => Promise<{ error: any }>;
   signOut: () => Promise<{ error: any }>;
+  updateUser: (updates: any) => Promise<{ error: any }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -83,6 +84,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return { error };
   };
 
+  const updateUser = async (updates: any) => {
+    const { error } = await supabase.auth.updateUser({
+      data: updates
+    });
+    return { error };
+  };
+
   const value = {
     session,
     user,
@@ -91,6 +99,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     signIn,
     signInWithGoogle,
     signOut,
+    updateUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
