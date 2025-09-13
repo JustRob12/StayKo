@@ -13,6 +13,7 @@ export interface Property {
   contact_name?: string;
   contact_number?: string;
   contact_email?: string;
+  status: 'Available' | 'Unavailable';
   created_at: string;
   updated_at: string;
 }
@@ -35,6 +36,7 @@ export interface CreatePropertyData {
   contact_name?: string;
   contact_number?: string;
   contact_email?: string;
+  status: 'Available' | 'Unavailable';
 }
 
 export interface UpdatePropertyData extends Partial<CreatePropertyData> {}

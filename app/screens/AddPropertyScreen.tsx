@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -11,27 +11,31 @@ import {
   Modal,
   Dimensions,
   Image,
-  FlatList
+  FlatList,
+  RefreshControl
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { WebView } from 'react-native-webview';
 import * as Location from 'expo-location';
 import * as ImagePicker from 'expo-image-picker';
-import { propertiesService, CreatePropertyData, propertyPhotosService } from '../lib/properties';
+import { propertiesService, CreatePropertyData, propertyPhotosService, Property } from '../lib/properties';
 import { useAuth } from '../contexts/AuthContext';
 
 const { width, height } = Dimensions.get('window');
 
-const AddPropertyScreen: React.FC = () => {
+const MyPropertiesScreen: React.FC = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [showAddForm, setShowAddForm] = useState(false);
   const [uploadingImages, setUploadingImages] = useState(false);
   const [showMap, setShowMap] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<{lat: number, lng: number} | null>(null);
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const webViewRef = useRef<WebView>(null);
 
-  // Form data
+  // Form data for adding new property
   const [formData, setFormData] = useState<CreatePropertyData>({
     type: 'rent',
     title: '',
@@ -43,7 +47,36 @@ const AddPropertyScreen: React.FC = () => {
     contact_name: '',
     contact_number: '',
     contact_email: '',
+    status: 'Available',
   });
+
+  // Load user's properties
+  useEffect(() => {
+    if (user?.id) {
+      loadProperties();
+    }
+  }, [user?.id]);
+
+  const loadProperties = async () => {
+    if (!user?.id) return;
+    
+    setLoading(true);
+    try {
+      const userProperties = await propertiesService.getPropertiesByUser(user.id);
+      setProperties(userProperties);
+    } catch (error) {
+      console.error('Error loading properties:', error);
+      Alert.alert('Error', 'Failed to load your properties');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadProperties();
+    setRefreshing(false);
+  };
 
   const handleInputChange = (field: keyof CreatePropertyData, value: string | number) => {
     setFormData(prev => ({
@@ -51,6 +84,59 @@ const AddPropertyScreen: React.FC = () => {
       [field]: value
     }));
   };
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('en-PH', {
+      style: 'currency',
+      currency: 'PHP',
+      minimumFractionDigits: 0,
+    }).format(price);
+  };
+
+  const getTypeColor = (type: string) => {
+    switch (type) {
+      case 'rent': return '#3B82F6';
+      case 'sale': return '#EF4444';
+      case 'boarding': return '#F59E0B';
+      default: return '#6B7280';
+    }
+  };
+
+  const renderPropertyCard = ({ item }: { item: Property }) => (
+    <TouchableOpacity style={styles.propertyCard}>
+      <View style={styles.propertyImageContainer}>
+        <View style={styles.propertyImagePlaceholder}>
+          <Ionicons name="home" size={40} color="#22C55E" />
+        </View>
+        <View style={[styles.typeBadge, { backgroundColor: getTypeColor(item.type) }]}>
+          <Text style={styles.typeBadgeText}>{item.type.toUpperCase()}</Text>
+        </View>
+      </View>
+      
+      <View style={styles.propertyInfo}>
+        <Text style={styles.propertyTitle} numberOfLines={2}>{item.title}</Text>
+        <Text style={styles.propertyLocation} numberOfLines={1}>
+          <Ionicons name="location" size={14} color="#6B7280" /> {item.location || 'Location not specified'}
+        </Text>
+        <Text style={styles.propertyPrice}>{formatPrice(item.price)}</Text>
+        
+        <View style={styles.propertyActions}>
+          <TouchableOpacity style={styles.actionButton}>
+            <Ionicons name="eye" size={16} color="#22C55E" />
+            <Text style={styles.actionButtonText}>View</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.actionButton}>
+            <Ionicons name="create" size={16} color="#3B82F6" />
+            <Text style={styles.actionButtonText}>Edit</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.actionButton}>
+            <Ionicons name="trash" size={16} color="#EF4444" />
+            <Text style={styles.actionButtonText}>Delete</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
 
   const openMapPicker = async () => {
     try {
@@ -214,9 +300,13 @@ const AddPropertyScreen: React.FC = () => {
             contact_name: '',
             contact_number: '',
             contact_email: '',
+            status: 'Available',
           });
           setSelectedLocation(null);
           setSelectedImages([]);
+          setShowAddForm(false);
+          // Reload properties list
+          loadProperties();
         }}
       ]);
     } catch (error) {
@@ -343,10 +433,19 @@ const AddPropertyScreen: React.FC = () => {
     </html>
   `;
 
-  return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <View style={styles.form}>
-        <Text style={styles.title}>🏠 Add New Property</Text>
+  if (showAddForm) {
+    return (
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+        <View style={styles.form}>
+          <View style={styles.formHeader}>
+            <TouchableOpacity 
+              style={styles.backButton}
+              onPress={() => setShowAddForm(false)}
+            >
+              <Ionicons name="arrow-back" size={24} color="#1F2937" />
+            </TouchableOpacity>
+            <Text style={styles.title}>🏠 Add New Property</Text>
+          </View>
         
         {/* Property Type */}
         <View style={styles.section}>
@@ -565,6 +664,66 @@ const AddPropertyScreen: React.FC = () => {
         </View>
       </Modal>
     </ScrollView>
+    );
+  }
+
+  return (
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>My Properties</Text>
+        <Text style={styles.headerSubtitle}>
+          {properties.length} {properties.length === 1 ? 'property' : 'properties'} listed
+        </Text>
+      </View>
+
+      {/* Properties List */}
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#22C55E" />
+          <Text style={styles.loadingText}>Loading your properties...</Text>
+        </View>
+      ) : properties.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Ionicons name="home-outline" size={80} color="#D1D5DB" />
+          <Text style={styles.emptyTitle}>No Properties Yet</Text>
+          <Text style={styles.emptySubtitle}>
+            Start by adding your first property to get started
+          </Text>
+          <TouchableOpacity 
+            style={styles.emptyButton}
+            onPress={() => setShowAddForm(true)}
+          >
+            <Ionicons name="add" size={20} color="#ffffff" />
+            <Text style={styles.emptyButtonText}>Add Your First Property</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <FlatList
+          data={properties}
+          keyExtractor={(item) => item.id}
+          renderItem={renderPropertyCard}
+          contentContainerStyle={styles.propertiesList}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={['#22C55E']}
+              tintColor="#22C55E"
+            />
+          }
+          showsVerticalScrollIndicator={false}
+        />
+      )}
+
+      {/* Floating Action Button */}
+      <TouchableOpacity 
+        style={styles.fab}
+        onPress={() => setShowAddForm(true)}
+      >
+        <Ionicons name="add" size={28} color="#ffffff" />
+      </TouchableOpacity>
+    </View>
   );
 };
 
@@ -573,16 +732,193 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F0FDF4',
   },
+  // Header styles
+  header: {
+    backgroundColor: '#ffffff',
+    padding: 20,
+    paddingTop: 60,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#1F2937',
+    marginBottom: 4,
+  },
+  headerSubtitle: {
+    fontSize: 16,
+    color: '#6B7280',
+  },
+  // Loading styles
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#6B7280',
+  },
+  // Empty state styles
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 40,
+  },
+  emptyTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#1F2937',
+    marginTop: 20,
+    marginBottom: 8,
+  },
+  emptySubtitle: {
+    fontSize: 16,
+    color: '#6B7280',
+    textAlign: 'center',
+    marginBottom: 30,
+    lineHeight: 24,
+  },
+  emptyButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#22C55E',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  emptyButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  // Properties list styles
+  propertiesList: {
+    padding: 20,
+    paddingBottom: 100,
+  },
+  propertyCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    overflow: 'hidden',
+  },
+  propertyImageContainer: {
+    position: 'relative',
+    height: 200,
+    backgroundColor: '#F3F4F6',
+  },
+  propertyImagePlaceholder: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F9FAFB',
+  },
+  typeBadge: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  typeBadgeText: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  propertyInfo: {
+    padding: 16,
+  },
+  propertyTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1F2937',
+    marginBottom: 8,
+  },
+  propertyLocation: {
+    fontSize: 14,
+    color: '#6B7280',
+    marginBottom: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  propertyPrice: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#22C55E',
+    marginBottom: 16,
+  },
+  propertyActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: '#F3F4F6',
+    flex: 1,
+    marginHorizontal: 4,
+    justifyContent: 'center',
+  },
+  actionButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginLeft: 4,
+  },
+  // Floating Action Button
+  fab: {
+    position: 'absolute',
+    bottom: 100,
+    right: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#22C55E',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  // Form styles (for add property form)
   form: {
     padding: 20,
     paddingBottom: 100,
+  },
+  formHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  backButton: {
+    marginRight: 15,
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#1F2937',
-    marginBottom: 20,
-    textAlign: 'center',
+    flex: 1,
   },
   section: {
     marginBottom: 20,
@@ -739,4 +1075,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default AddPropertyScreen;
+export default MyPropertiesScreen;

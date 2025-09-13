@@ -12,7 +12,7 @@ import { DashboardScreen } from './screens/DashboardScreen';
 import HomeScreen from './screens/HomeScreen';
 import SearchScreen from './screens/SearchScreen';
 import MapScreen from './screens/MapScreen';
-import AddPropertyScreen from './screens/AddPropertyScreen';
+import MyPropertiesScreen from './screens/MyPropertiesScreen';
 import ProfileScreen from './screens/ProfileScreen';
 
 const Stack = createStackNavigator();
@@ -35,12 +35,16 @@ function Header() {
   
   return (
     <View style={styles.header}>
-      <Text style={styles.headerTitle}>StayKo</Text>
-      <TouchableOpacity 
-        style={styles.profileContainer}
-        onPress={() => setShowDropdown(!showDropdown)}
-        activeOpacity={0.7}
-      >
+      <View style={styles.headerContent}>
+        <View style={styles.titleContainer}>
+          <Text style={styles.headerTitle}>StayKo</Text>
+          <Text style={styles.headerSlogan}>Your Perfect Home Awaits</Text>
+        </View>
+        <TouchableOpacity 
+          style={styles.profileContainer}
+          onPress={() => setShowDropdown(!showDropdown)}
+          activeOpacity={0.7}
+        >
         {user?.user_metadata?.avatar_url ? (
           <Image 
             source={{ uri: user.user_metadata.avatar_url }} 
@@ -52,6 +56,7 @@ function Header() {
           </View>
         )}
       </TouchableOpacity>
+      </View>
 
       <Modal
         visible={showDropdown}
@@ -138,9 +143,9 @@ function MainTabs() {
           if (route.name === 'Home') {
             iconName = focused ? 'home' : 'home-outline';
           } else if (route.name === 'Search') {
-            iconName = focused ? 'search' : 'search-outline';
-          } else if (route.name === 'AddProperty') {
-            iconName = focused ? 'add-circle' : 'add-circle-outline';
+            iconName = focused ? 'heart' : 'heart-outline';
+          } else if (route.name === 'MyProperties') {
+            iconName = focused ? 'home' : 'home-outline';
           } else if (route.name === 'Profile') {
             iconName = focused ? 'person' : 'person-outline';
           } else {
@@ -162,7 +167,7 @@ function MainTabs() {
         name="Search" 
         component={SearchScreen}
         options={{
-          tabBarLabel: 'Search',
+          tabBarLabel: 'Favourite',
         }}
       />
       <Tab.Screen 
@@ -187,10 +192,10 @@ function MainTabs() {
         }}
       />
       <Tab.Screen 
-        name="AddProperty" 
-        component={AddPropertyScreen}
+        name="MyProperties" 
+        component={MyPropertiesScreen}
         options={{
-          tabBarLabel: 'Add',
+          tabBarLabel: 'My List',
         }}
       />
       <Tab.Screen 
@@ -251,9 +256,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#F0FDF4',
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     paddingHorizontal: 20,
     paddingTop: 50,
     paddingBottom: 15,
@@ -269,10 +271,24 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2,
   },
+  headerContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  titleContainer: {
+    flex: 1,
+  },
   headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#22C55E',
+    marginBottom: 2,
+  },
+  headerSlogan: {
+    fontSize: 12,
+    color: '#6B7280',
+    fontStyle: 'italic',
   },
   profileContainer: {
     width: 40,
