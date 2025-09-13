@@ -14,6 +14,7 @@ import SearchScreen from './screens/SearchScreen';
 import MapScreen from './screens/MapScreen';
 import MyPropertiesScreen from './screens/MyPropertiesScreen';
 import ProfileScreen from './screens/ProfileScreen';
+import NetworkWarning from './components/NetworkWarning';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -38,7 +39,7 @@ function Header() {
       <View style={styles.headerContent}>
         <View style={styles.titleContainer}>
           <Text style={styles.headerTitle}>StayKo</Text>
-          <Text style={styles.headerSlogan}>Where your next home begins.</Text>
+          <Text style={styles.headerSlogan}>Where your next home begins</Text>
         </View>
         <TouchableOpacity 
           style={styles.profileContainer}
@@ -245,6 +246,7 @@ export default function App() {
   return (
     <AuthProvider>
       <RootNavigator />
+      <NetworkWarning />
       <StatusBar style="auto" />
     </AuthProvider>
   );

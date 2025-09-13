@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 
 // Load environment variables
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://uicqzvblfbcobvizpsjp.supabase.co';
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_KEY || 'your-actual-supabase-anon-key-here';
+const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVpY3F6dmJsZmJjb2J2aXpwc2pwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQ5NzQ4NzQsImV4cCI6MjA1MDU1MDg3NH0.REPLACE_WITH_YOUR_ACTUAL_ANON_KEY';
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {

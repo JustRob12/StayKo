@@ -60,25 +60,29 @@ const ProfileScreen: React.FC = () => {
   };
 
   const createInitialProfile = async () => {
-    if (!user?.id) return;
+    if (!user?.id || !user?.email) return;
     
-    const initialProfile: Profile = {
-      id: user.id,
-      full_name: user.user_metadata?.full_name || '',
-      phone: '',
-      contactnumber: '',
-      avatar_url: user.user_metadata?.avatar_url || null,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
+    try {
+      const { data, error } = await profilesService.createProfileIfNotExists(
+        user.id,
+        user.email,
+        user.user_metadata?.full_name
+      );
 
-    const { data, error } = await profilesService.createProfile(initialProfile);
-    if (data && !error) {
-      setProfile(data);
-      setProfileData({
-        fullName: data.full_name || '',
-        contactnumber: data.contactnumber || '',
-      });
+      if (error) {
+        console.error('Error creating initial profile:', error);
+        return;
+      }
+
+      if (data) {
+        setProfile(data);
+        setProfileData({
+          fullName: data.full_name || '',
+          contactnumber: data.contactnumber || '',
+        });
+      }
+    } catch (error) {
+      console.error('Error creating initial profile:', error);
     }
   };
 

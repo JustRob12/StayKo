@@ -53,9 +53,10 @@ const HomeScreen: React.FC = () => {
     filterProperties();
   }, [properties, searchQuery, selectedType, minPrice, maxPrice]);
 
-  // Auto-refresh favorites when screen comes into focus
+  // Auto-refresh properties and favorites when screen comes into focus
   useFocusEffect(
     useCallback(() => {
+      loadAllProperties(true); // Refresh properties to get latest
       loadUserFavorites();
     }, [])
   );
@@ -68,9 +69,20 @@ const HomeScreen: React.FC = () => {
         setLoading(true);
       }
       
-      // Load all properties
+      // Load all properties (already ordered by created_at DESC)
       const allProperties = await propertiesService.getAllProperties();
-      setProperties(allProperties);
+      
+      // Ensure properties are sorted by created_at (newest first)
+      const sortedProperties = allProperties.sort((a, b) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+      
+      console.log('Loaded properties count:', sortedProperties.length);
+      if (sortedProperties.length > 0) {
+        console.log('Latest property:', sortedProperties[0].title, 'created at:', sortedProperties[0].created_at);
+      }
+      
+      setProperties(sortedProperties);
       
       // Load photos for each property
       const photosMap: {[key: string]: string[]} = {};
@@ -266,6 +278,13 @@ const HomeScreen: React.FC = () => {
     }
   };
 
+  const isNewProperty = (createdAt: string) => {
+    const now = new Date();
+    const created = new Date(createdAt);
+    const diffInHours = (now.getTime() - created.getTime()) / (1000 * 60 * 60);
+    return diffInHours < 24; // New if created within last 24 hours
+  };
+
   const renderPropertyCard = ({ item }: { item: Property }) => {
     const photos = propertyPhotos[item.id] || [];
     const hasPhotos = photos.length > 0;
@@ -313,6 +332,11 @@ const HomeScreen: React.FC = () => {
           
           {/* Type and Status Badges */}
           <View style={styles.badgeContainer}>
+            {isNewProperty(item.created_at) && (
+              <View style={styles.newBadge}>
+                <Text style={styles.newBadgeText}>NEW</Text>
+              </View>
+            )}
             <View style={[styles.typeBadge, { backgroundColor: getTypeColor(item.type) }]}>
               <Text style={styles.typeBadgeText}>{item.type.toUpperCase()}</Text>
             </View>
@@ -891,6 +915,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 4,
     marginTop: 2,
+  },
+  newBadge: {
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderRadius: 3,
+    backgroundColor: '#FF6B35',
+  },
+  newBadgeText: {
+    color: '#ffffff',
+    fontSize: 8,
+    fontWeight: 'bold',
   },
   typeBadge: {
     paddingHorizontal: 4,

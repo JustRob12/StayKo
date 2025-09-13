@@ -17,15 +17,15 @@ export const profilesService = {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', userId)
-        .single();
+        .eq('id', userId);
 
       if (error) {
         console.error('Error fetching profile:', error);
         return null;
       }
 
-      return data;
+      // Return the first profile if it exists, otherwise null
+      return data && data.length > 0 ? data[0] : null;
     } catch (error) {
       console.error('Error fetching profile:', error);
       return null;
@@ -41,10 +41,13 @@ export const profilesService = {
           onConflict: 'id',
           ignoreDuplicates: false 
         })
-        .select()
-        .single();
+        .select();
 
-      return { data, error };
+      if (error) {
+        return { data: null, error };
+      }
+
+      return { data: data && data.length > 0 ? data[0] : null, error: null };
     } catch (error) {
       console.error('Error upserting profile:', error);
       return { data: null, error };
@@ -58,10 +61,13 @@ export const profilesService = {
         .from('profiles')
         .update(updates)
         .eq('id', userId)
-        .select()
-        .single();
+        .select();
 
-      return { data, error };
+      if (error) {
+        return { data: null, error };
+      }
+
+      return { data: data && data.length > 0 ? data[0] : null, error: null };
     } catch (error) {
       console.error('Error updating profile:', error);
       return { data: null, error };
@@ -74,12 +80,40 @@ export const profilesService = {
       const { data, error } = await supabase
         .from('profiles')
         .insert(profileData)
-        .select()
-        .single();
+        .select();
 
-      return { data, error };
+      if (error) {
+        return { data: null, error };
+      }
+
+      return { data: data && data.length > 0 ? data[0] : null, error: null };
     } catch (error) {
       console.error('Error creating profile:', error);
+      return { data: null, error };
+    }
+  },
+
+  // Create profile if it doesn't exist
+  async createProfileIfNotExists(userId: string, email: string, fullName?: string): Promise<{ data: Profile | null; error: any }> {
+    try {
+      // First check if profile exists
+      const existingProfile = await this.getProfile(userId);
+      if (existingProfile) {
+        return { data: existingProfile, error: null };
+      }
+
+      // Create new profile
+      const profileData: Partial<Profile> = {
+        id: userId,
+        full_name: fullName || null,
+        contactnumber: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      return await this.createProfile(profileData as Profile);
+    } catch (error) {
+      console.error('Error creating profile if not exists:', error);
       return { data: null, error };
     }
   }

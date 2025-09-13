@@ -17,6 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { favoritesService } from '../lib/favorites';
 import { propertyPhotosService, Property } from '../lib/properties';
+import { profilesService } from '../lib/profiles';
 import { useAuth } from '../contexts/AuthContext';
 
 const { width } = Dimensions.get('window');
@@ -29,6 +30,9 @@ const SearchScreen: React.FC = () => {
   const [showPropertyModal, setShowPropertyModal] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  
+  // Property creator profile state
+  const [propertyCreatorProfile, setPropertyCreatorProfile] = useState<any>(null);
 
   useEffect(() => {
     loadFavoriteProperties();
@@ -118,16 +122,27 @@ const SearchScreen: React.FC = () => {
     );
   };
 
-  const openPropertyModal = (property: Property) => {
+  const openPropertyModal = async (property: Property) => {
     setSelectedProperty(property);
     setCurrentImageIndex(0);
     setShowPropertyModal(true);
+    
+    // Load the property creator's profile
+    try {
+      const profile = await profilesService.getProfile(property.user_id);
+      console.log('Loaded profile for user:', property.user_id, profile);
+      setPropertyCreatorProfile(profile);
+    } catch (error) {
+      console.error('Error loading property creator profile:', error);
+      setPropertyCreatorProfile(null);
+    }
   };
 
   const closePropertyModal = () => {
     setShowPropertyModal(false);
     setSelectedProperty(null);
     setCurrentImageIndex(0);
+    setPropertyCreatorProfile(null);
   };
 
   const nextImage = () => {
@@ -354,6 +369,35 @@ const SearchScreen: React.FC = () => {
               <View style={styles.modalContentContainer}>
                 <View style={styles.propertyHeader}>
                   <Text style={styles.modalPropertyTitle}>{selectedProperty.title}</Text>
+                </View>
+                
+                {/* Property Creator Information */}
+                <View style={styles.ownerSection}>
+                  <View style={styles.ownerInfo}>
+                    <View style={styles.ownerAvatar}>
+                      {propertyCreatorProfile?.avatar_url && propertyCreatorProfile.avatar_url.trim() !== '' ? (
+                        <Image 
+                          source={{ uri: propertyCreatorProfile.avatar_url }} 
+                          style={styles.ownerAvatarImage}
+                          resizeMode="cover"
+                          onError={(error) => {
+                            console.log('Image load error:', error);
+                          }}
+                          onLoad={() => {
+                            console.log('Image loaded successfully');
+                          }}
+                        />
+                      ) : (
+                        <Ionicons name="person" size={20} color="#22C55E" />
+                      )}
+                    </View>
+                    <View style={styles.ownerDetails}>
+                      <Text style={styles.ownerLabel}>Property Creator</Text>
+                      <Text style={styles.ownerName}>
+                        {propertyCreatorProfile?.full_name || propertyCreatorProfile?.first_name || 'Creator not specified'}
+                      </Text>
+                    </View>
+                  </View>
                 </View>
                 
                 <View style={styles.modalBadgeContainer}>
@@ -697,6 +741,46 @@ const styles = StyleSheet.create({
   },
   propertyHeader: {
     marginBottom: 12,
+  },
+  ownerSection: {
+    marginBottom: 16,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  ownerInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  ownerAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F0FDF4',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+    borderWidth: 2,
+    borderColor: '#22C55E',
+    overflow: 'hidden',
+  },
+  ownerAvatarImage: {
+    width: '100%',
+    height: '100%',
+  },
+  ownerDetails: {
+    flex: 1,
+  },
+  ownerLabel: {
+    fontSize: 12,
+    color: '#6B7280',
+    fontWeight: '500',
+    marginBottom: 2,
+  },
+  ownerName: {
+    fontSize: 16,
+    color: '#1F2937',
+    fontWeight: '600',
   },
   modalPropertyTitle: {
     fontSize: 24,
