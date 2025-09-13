@@ -735,7 +735,7 @@ const MyPropertiesScreen: React.FC = () => {
             >
               <Ionicons name="arrow-back" size={24} color="#1F2937" />
             </TouchableOpacity>
-            <Text style={styles.title}>🏠 Add New Property</Text>
+            <Text style={styles.title}> Add New Property</Text>
           </View>
         
         {/* Property Type */}
@@ -889,7 +889,7 @@ const MyPropertiesScreen: React.FC = () => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Contact Information</Text>
           
-          <Text style={styles.label}>Contact Name</Text>
+          <Text style={styles.label}>Facebook Username</Text>
           <TextInput
             style={styles.input}
             value={formData.contact_name}
@@ -1198,7 +1198,7 @@ const MyPropertiesScreen: React.FC = () => {
               >
                 <Ionicons name="arrow-back" size={24} color="#1F2937" />
               </TouchableOpacity>
-              <Text style={styles.title}>✏️ Edit Property</Text>
+              <Text style={styles.title}>Edit Property</Text>
             </View>
             
             {/* Property Type */}

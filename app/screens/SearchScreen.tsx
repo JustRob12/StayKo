@@ -351,7 +351,7 @@ const SearchScreen: React.FC = () => {
 
             {/* Property Information */}
             <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
-              <View style={styles.propertyDetails}>
+              <View style={styles.modalContentContainer}>
                 <View style={styles.propertyHeader}>
                   <Text style={styles.modalPropertyTitle}>{selectedProperty.title}</Text>
                 </View>
@@ -389,32 +389,32 @@ const SearchScreen: React.FC = () => {
                     </Text>
                   </View>
                 )}
-              </View>
 
-              {/* Contact Information */}
-              <View style={styles.contactSection}>
-                <Text style={styles.sectionTitle}>Contact Information</Text>
-                
-                {selectedProperty.contact_name && (
-                  <View style={styles.contactItem}>
-                    <Ionicons name="person" size={20} color="#22C55E" />
-                    <Text style={styles.contactText}>{selectedProperty.contact_name}</Text>
-                  </View>
-                )}
-                
-                {selectedProperty.contact_number && (
-                  <TouchableOpacity style={styles.contactItem}>
-                    <Ionicons name="call" size={20} color="#22C55E" />
-                    <Text style={styles.contactText}>{selectedProperty.contact_number}</Text>
-                  </TouchableOpacity>
-                )}
-                
-                {selectedProperty.contact_email && (
-                  <TouchableOpacity style={styles.contactItem}>
-                    <Ionicons name="mail" size={20} color="#22C55E" />
-                    <Text style={styles.contactText}>{selectedProperty.contact_email}</Text>
-                  </TouchableOpacity>
-                )}
+                {/* Contact Information */}
+                <View style={styles.contactSection}>
+                  <Text style={styles.sectionTitle}>Contact Information</Text>
+                  
+                  {selectedProperty.contact_name && (
+                    <View style={styles.contactItem}>
+                      <Ionicons name="person" size={20} color="#22C55E" />
+                      <Text style={styles.contactText}>{selectedProperty.contact_name}</Text>
+                    </View>
+                  )}
+                  
+                  {selectedProperty.contact_number && (
+                    <TouchableOpacity style={styles.contactItem}>
+                      <Ionicons name="call" size={20} color="#22C55E" />
+                      <Text style={styles.contactText}>{selectedProperty.contact_number}</Text>
+                    </TouchableOpacity>
+                  )}
+                  
+                  {selectedProperty.contact_email && (
+                    <TouchableOpacity style={styles.contactItem}>
+                      <Ionicons name="mail" size={20} color="#22C55E" />
+                      <Text style={styles.contactText}>{selectedProperty.contact_email}</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
               </View>
             </ScrollView>
           </View>
@@ -689,18 +689,11 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     flex: 1,
-    padding: 20,
+    padding: 0,
   },
-  propertyDetails: {
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
+  modalContentContainer: {
     padding: 20,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    backgroundColor: '#F0FDF4',
   },
   propertyHeader: {
     marginBottom: 12,
@@ -757,15 +750,8 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   contactSection: {
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    padding: 20,
+    marginTop: 20,
     marginBottom: 100,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
   sectionTitle: {
     fontSize: 18,

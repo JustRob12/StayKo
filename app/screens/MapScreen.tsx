@@ -65,10 +65,17 @@ const MapScreen: React.FC = () => {
       // Get fresh location first
       const freshLocation = await getCurrentLocationAndReturn();
       
-      // Then load all properties
+      // Center map on user's current location immediately
+      if (freshLocation && webViewRef.current) {
+        const { latitude, longitude } = freshLocation.coords;
+        const script = `updateMapLocation(${latitude}, ${longitude});`;
+        webViewRef.current.injectJavaScript(script);
+      }
+      
+      // Then load all properties (this will add markers but won't change the map view)
       await loadAllProperties(true);
       
-      // Center map on user's current location after refresh
+      // Ensure map stays centered on user's location after loading properties
       if (freshLocation && webViewRef.current) {
         const { latitude, longitude } = freshLocation.coords;
         const script = `updateMapLocation(${latitude}, ${longitude});`;
@@ -389,11 +396,9 @@ const MapScreen: React.FC = () => {
             }
           });
           
-          // Fit map to show all markers if there are properties
-          if (propertyMarkers.length > 0) {
-            const group = new L.featureGroup(propertyMarkers);
-            map.fitBounds(group.getBounds().pad(0.1));
-          }
+          // Don't automatically fit map to show all markers
+          // This prevents the map from zooming out to show all properties
+          // The map should stay focused on the user's current location
         }
         
         // Function to select property (called from popup)
@@ -571,13 +576,14 @@ const MapScreen: React.FC = () => {
               <View style={styles.propertyDetails}>
                 <View style={styles.propertyHeader}>
                   <Text style={styles.propertyTitle}>{selectedProperty.title}</Text>
-                  <View style={styles.badgeContainer}>
-                    <View style={[styles.typeBadge, { backgroundColor: getTypeColor(selectedProperty.type) }]}>
-                      <Text style={styles.typeText}>{selectedProperty.type.toUpperCase()}</Text>
-                    </View>
-                    <View style={[styles.statusBadge, { backgroundColor: getStatusColor(selectedProperty.status) }]}>
-                      <Text style={styles.statusText}>{selectedProperty.status}</Text>
-                    </View>
+                </View>
+
+                <View style={styles.badgeContainer}>
+                  <View style={[styles.typeBadge, { backgroundColor: getTypeColor(selectedProperty.type) }]}>
+                    <Text style={styles.typeText}>{selectedProperty.type.toUpperCase()}</Text>
+                  </View>
+                  <View style={[styles.statusBadge, { backgroundColor: getStatusColor(selectedProperty.status) }]}>
+                    <Text style={styles.statusText}>{selectedProperty.status}</Text>
                   </View>
                 </View>
 
@@ -608,7 +614,7 @@ const MapScreen: React.FC = () => {
                   
                   {selectedProperty.contact_name && (
                     <View style={styles.contactItem}>
-                      <Ionicons name="person" size={20} color="#6B7280" />
+                      <Ionicons name="logo-facebook" size={20} color="#22C55E" />
                       <Text style={styles.contactText}>{selectedProperty.contact_name}</Text>
                     </View>
                   )}
@@ -812,21 +818,18 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   propertyHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
     marginBottom: 12,
   },
   propertyTitle: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#1F2937',
-    flex: 1,
-    marginRight: 12,
+    marginBottom: 8,
   },
   badgeContainer: {
     flexDirection: 'row',
     gap: 8,
+    marginBottom: 12,
   },
   typeBadge: {
     paddingHorizontal: 12,

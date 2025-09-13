@@ -38,7 +38,7 @@ function Header() {
       <View style={styles.headerContent}>
         <View style={styles.titleContainer}>
           <Text style={styles.headerTitle}>StayKo</Text>
-          <Text style={styles.headerSlogan}>Your Perfect Home Awaits</Text>
+          <Text style={styles.headerSlogan}>Where your next home begins.</Text>
         </View>
         <TouchableOpacity 
           style={styles.profileContainer}

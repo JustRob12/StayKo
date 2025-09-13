@@ -236,6 +236,36 @@ const HomeScreen: React.FC = () => {
     }
   };
 
+  const getTimeAgo = (createdAt: string) => {
+    const now = new Date();
+    const created = new Date(createdAt);
+    const diffInMs = now.getTime() - created.getTime();
+    
+    const seconds = Math.floor(diffInMs / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+    const weeks = Math.floor(days / 7);
+    const months = Math.floor(days / 30);
+    const years = Math.floor(days / 365);
+    
+    if (years > 0) {
+      return `${years} year${years > 1 ? 's' : ''} ago`;
+    } else if (months > 0) {
+      return `${months} month${months > 1 ? 's' : ''} ago`;
+    } else if (weeks > 0) {
+      return `${weeks} week${weeks > 1 ? 's' : ''} ago`;
+    } else if (days > 0) {
+      return `${days} day${days > 1 ? 's' : ''} ago`;
+    } else if (hours > 0) {
+      return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+    } else if (minutes > 0) {
+      return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+    } else {
+      return `${seconds} second${seconds > 1 ? 's' : ''} ago`;
+    }
+  };
+
   const renderPropertyCard = ({ item }: { item: Property }) => {
     const photos = propertyPhotos[item.id] || [];
     const hasPhotos = photos.length > 0;
@@ -274,6 +304,11 @@ const HomeScreen: React.FC = () => {
           {/* Location */}
           <Text style={styles.propertyLocation} numberOfLines={1}>
             <Ionicons name="location" size={12} color="#6B7280" /> {item.location || 'Location not specified'}
+          </Text>
+          
+          {/* Duration */}
+          <Text style={styles.propertyDuration}>
+            <Ionicons name="time" size={10} color="#6B7280" /> {getTimeAgo(item.created_at)}
           </Text>
           
           {/* Type and Status Badges */}
@@ -506,7 +541,7 @@ const HomeScreen: React.FC = () => {
 
             {/* Property Information */}
             <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
-              <View style={styles.modalPropertyDetails}>
+              <View style={styles.modalContentContainer}>
                 <View style={styles.propertyHeader}>
                   <Text style={styles.modalPropertyTitle}>{selectedProperty.title}</Text>
                 </View>
@@ -578,32 +613,32 @@ const HomeScreen: React.FC = () => {
                     </Text>
                   </View>
                 )}
-              </View>
 
-              {/* Contact Information */}
-              <View style={styles.contactSection}>
-                <Text style={styles.sectionTitle}>Contact Information</Text>
-                
-                {selectedProperty.contact_name && (
-                  <View style={styles.contactItem}>
-                    <Ionicons name="person" size={20} color="#22C55E" />
-                    <Text style={styles.contactText}>{selectedProperty.contact_name}</Text>
-                  </View>
-                )}
-                
-                {selectedProperty.contact_number && (
-                  <TouchableOpacity style={styles.contactItem}>
-                    <Ionicons name="call" size={20} color="#22C55E" />
-                    <Text style={styles.contactText}>{selectedProperty.contact_number}</Text>
-                  </TouchableOpacity>
-                )}
-                
-                {selectedProperty.contact_email && (
-                  <TouchableOpacity style={styles.contactItem}>
-                    <Ionicons name="mail" size={20} color="#22C55E" />
-                    <Text style={styles.contactText}>{selectedProperty.contact_email}</Text>
-                  </TouchableOpacity>
-                )}
+                {/* Contact Information */}
+                <View style={styles.contactSection}>
+                  <Text style={styles.sectionTitle}>Contact Information</Text>
+                  
+                  {selectedProperty.contact_name && (
+                    <View style={styles.contactItem}>
+                      <Ionicons name="logo-facebook" size={20} color="#22C55E" />
+                      <Text style={styles.contactText}>{selectedProperty.contact_name}</Text>
+                    </View>
+                  )}
+                  
+                  {selectedProperty.contact_number && (
+                    <TouchableOpacity style={styles.contactItem}>
+                      <Ionicons name="call" size={20} color="#22C55E" />
+                      <Text style={styles.contactText}>{selectedProperty.contact_number}</Text>
+                    </TouchableOpacity>
+                  )}
+                  
+                  {selectedProperty.contact_email && (
+                    <TouchableOpacity style={styles.contactItem}>
+                      <Ionicons name="mail" size={20} color="#22C55E" />
+                      <Text style={styles.contactText}>{selectedProperty.contact_email}</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
               </View>
             </ScrollView>
           </View>
@@ -805,12 +840,12 @@ const styles = StyleSheet.create({
     elevation: 3,
     overflow: 'hidden',
     flexDirection: 'row',
-    height: 90,
+    height: 110,
   },
   propertyImageContainer: {
     position: 'relative',
     width: 80,
-    height: 90,
+    height: 110,
     backgroundColor: '#F3F4F6',
   },
   propertyImage: {
@@ -887,6 +922,13 @@ const styles = StyleSheet.create({
   propertyLocation: {
     fontSize: 10,
     color: '#6B7280',
+    marginBottom: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  propertyDuration: {
+    fontSize: 9,
+    color: '#9CA3AF',
     marginBottom: 2,
     flexDirection: 'row',
     alignItems: 'center',
@@ -991,12 +1033,9 @@ const styles = StyleSheet.create({
      flex: 1,
      padding: 0,
    },
-   modalPropertyDetails: {
-     backgroundColor: '#ffffff',
-     borderRadius: 0,
+   modalContentContainer: {
      padding: 20,
-     marginBottom: 0,
-     flex: 1,
+     backgroundColor: '#F0FDF4',
    },
   propertyHeader: {
     marginBottom: 12,
@@ -1098,11 +1137,7 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
    contactSection: {
-     backgroundColor: '#ffffff',
-     borderRadius: 0,
-     padding: 20,
-     marginBottom: 0,
-     flex: 1,
+     marginTop: 20,
    },
   sectionTitle: {
     fontSize: 18,
